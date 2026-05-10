@@ -1,5 +1,6 @@
 const Order = require('../models/order.model');
 const MenuItem = require('../models/menu.model'); 
+const { ROLES } = require("../core/constants");
 
 
 // Define valid status transitions
@@ -73,15 +74,20 @@ const updateOrderStatus = async (orderId, newStatus, requestingUser )=>{
         throw error;
     }
 
-    if(requestingUser.role !== "admin"){
+    if(!requestingUser.roles.includes(ROLES.ADMIN)){
         const error = new Error("Forbidden: Only admins can update order status");
         error.statusCode = 403;
         throw error;
     }
 
-    order.transitionTo(newStatus);
-    await order.save();
-    return order;
+    try {
+        order.transitionTo(newStatus);
+        await order.save();
+        return order;
+    } catch (err) {
+        err.statusCode = 400;
+        throw err;
+    }
 }
 
 module.exports = {

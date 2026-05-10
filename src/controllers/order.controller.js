@@ -10,9 +10,9 @@ const createOrder = async(req, res, next)=>{
             message: "Order created successfully",
             data: order,
         });
-
     }catch(err){
-        console.log("error caught:", err.message);
+        console.log("CREATE ORDER ERROR:", err.message);
+        console.log("STACK:", err.stack);
         next(err);
     }
 };
@@ -27,6 +27,8 @@ const getMyOrders = async(req, res, next)=>{
             data: orders,
         });
     }catch(err){
+        console.log("GET MY ORDERS ERROR:", err.message);
+        console.log("STACK:", err.stack);
         next(err);
     }
 };
@@ -42,6 +44,8 @@ const getAllOrders = async(req, res, next)=>{
             data: orders,
         });
     }catch(err){
+        console.log("GET ALL ORDERS ERROR:", err.message);
+        console.log("STACK:", err.stack);
         next(err);
     }
 };
