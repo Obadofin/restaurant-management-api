@@ -1,18 +1,24 @@
 {
   "dependencies": {
+    "axios": "^1.16.0",
     "bcryptjs": "^3.0.3",
+    "colors": "^1.4.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "http-status-codes": "^2.3.0",
+    "joi": "^18.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1"
   },
   "name": "restaurant_api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --runInBand --forceExit",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "repository": {
     "type": "git",
@@ -22,8 +28,24 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "testTimeout": 30000,
+    "setupFiles": [
+      "./tests/setup.js"
+    ]
+  },
   "bugs": {
     "url": "https://github.com/Obadofin/restaurant-management-api/issues"
   },
-  "homepage": "https://github.com/Obadofin/restaurant-management-api#readme"
+  "homepage": "https://github.com/Obadofin/restaurant-management-api#readme",
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.1.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
+  }
 }
