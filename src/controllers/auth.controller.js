@@ -1,5 +1,4 @@
 const User = require("../models/user.model");
-const bcrypt = require("bcryptjs");
 const asyncHandler = require("../utils/asyncHandler");
 const generateToken = require('../utils/generateToken');
 
@@ -17,12 +16,10 @@ exports.register = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   const user = await User.create({
     name,
     email,
-    password: hashedPassword,
+    password,
     roles: roles || ["customer"],
   });
 
@@ -43,7 +40,7 @@ exports.login = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  if (!user || !(await user.matchPassword(password))) {
     const error = new Error("Invalid credentials");
     error.statusCode = 401;
     throw error;

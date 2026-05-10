@@ -15,9 +15,9 @@ const registerValidation = Joi.object({
     .max(20)
     .required(),
 
-  role: Joi.string()
-    .valid("customer")
-    .default("customer")
+ roles: Joi.array()
+    .items(Joi.string().valid("customer", "admin", "staff"))
+    .optional(),
 });
 
 module.exports = {
