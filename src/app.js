@@ -12,6 +12,7 @@ app.use(express.json());
 app.use("/api/users", require("./routes/auth.routes"));
 app.use("/api/categories", require("./routes/category.routes"));
 app.use("/api/menu", require("./routes/menu.routes"));
+app.use("/api/orders", require("./routes/order.routes"));
 
 // Error handler
 app.use(errorHandler);
