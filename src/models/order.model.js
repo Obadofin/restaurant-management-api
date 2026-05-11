@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const { StatusCodes } = require('http-status-codes');
+const MenuItem = require('../models/menu.model');
+const User = require('../models/user.model');
 
 const orderItemSchema = new mongoose.Schema({
     menuItemId: {
@@ -73,12 +76,13 @@ orderSchema.methods.canTransitionTo = function(newStatus){
     return VALID_TRANSITION[this.status].includes(newStatus);
 };
 
-orderSchema.methods.transitionTo = function(newStatus){
-    if(!this.canTransitionTo(newStatus)){
-        throw new Error(`Invalid status transition from ${this.status} to ${newStatus}. Allowed: ${VALID_TRANSITION[this.status].join(", ") || "none"}`);
-        
-    };
-    
+orderSchema.methods.transitionTo = function(newStatus) {
+    if (!this.canTransitionTo(newStatus)) {
+        const error = new Error(`Invalid status transition from ${this.status} to ${newStatus}. Allowed: ${VALID_TRANSITION[this.status].join(", ") || "none"}`);
+        error.statusCode = StatusCodes.BAD_REQUEST;
+        throw error;
+    }
+
     this.status = newStatus;
     return this;
 };

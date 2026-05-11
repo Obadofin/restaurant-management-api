@@ -46,50 +46,73 @@ const validateAndEnrichItems = async (requestedItems) => {
 
 
 // Create a new order
-const createOrder = async (userId, requestedItems)=>{
+const createOrder = async (userId, requestedItems) => {
     const items = await validateAndEnrichItems(requestedItems);
-    const order = new Order({userId, items});
-    await order.save();
+    const order = await Order.create({ userId, items });
+
+    if (!order) {
+        const error = new Error("Order could not be created");
+        error.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+        throw error;
+    }
+
     return order;
 };
 
-
 // Get orders for a specific user
-const getUserOrders = async (userId)=>{
-    return await Order.find({userId}).sort({createdAt: -1});
-};
+const getUserOrders = async (userId) => {
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
+    if (!orders) {
+        const error = new Error("Could not retrieve orders");
+        error.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+        throw error;
+    }
+
+    return orders;
+};
 
 // Get all orders (for admin)
-const getAllOrders = async ()=>{
-    return Order.find().sort({createdAt: -1});
+const getAllOrders = async () => {
+    const orders = await Order.find().sort({ createdAt: -1 });
+
+    if (!orders) {
+        const error = new Error("Could not retrieve orders");
+        error.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+        throw error;
+    }
+
+    return orders;
 };
 
-// update order status with validation
-const updateOrderStatus = async (orderId, newStatus, requestingUser )=>{
+// Update order status
+const updateOrderStatus = async (orderId, newStatus, requestingUser) => {
     const order = await Order.findById(orderId);
 
-    if(!order){
+    if (!order) {
         const error = new Error("Order not found");
         error.statusCode = StatusCodes.NOT_FOUND;
         throw error;
     }
 
-    if(!requestingUser.roles.includes(ROLES.ADMIN)){
+    if (!requestingUser.roles.includes(ROLES.ADMIN)) {
         const error = new Error("Forbidden: Only admins can update order status");
         error.statusCode = StatusCodes.FORBIDDEN;
         throw error;
     }
 
-    try {
-        order.transitionTo(newStatus);
-        await order.save();
-        return order;
-    } catch (err) {
-        err.statusCode = StatusCodes.BAD_REQUEST;
-        throw err;
+    order.transitionTo(newStatus);
+    const updatedOrder = await order.save();
+
+    if (!updatedOrder) {
+        const error = new Error("Order status could not be updated");
+        error.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+        throw error;
     }
-}
+
+    return updatedOrder;
+};
+
 
 module.exports = {
     createOrder,
