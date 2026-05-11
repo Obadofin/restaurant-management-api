@@ -1,69 +1,45 @@
 const orderService = require('../services/order.service');
+const asyncHandler = require('../utils/asyncHandler');
 
-// Create a new order
 // POST /api/orders
-const createOrder = async(req, res, next)=>{
-    try{
-        const order = await orderService.createOrder(req.user._id, req.body.items);
-        res.status(201).json({
-            success: true,
-            message: "Order created successfully",
-            data: order,
-        });
-    }catch(err){
-        console.log("CREATE ORDER ERROR:", err.message);
-        console.log("STACK:", err.stack);
-        next(err);
-    }
-};
+const createOrder = asyncHandler(async(req, res) => {
+    const order = await orderService.createOrder(req.user._id, req.body.items);
+    res.status(201).json({
+        success: true,
+        message: "Order created successfully",
+        data: order,
+    });
+});
 
 // GET /api/orders/me
-const getMyOrders = async(req, res, next)=>{
-    try{
-        const orders = await orderService.getUserOrders(req.user._id);
-        res.status(200).json({
-            success: true,
-            count: orders.length,
-            data: orders,
-        });
-    }catch(err){
-        console.log("GET MY ORDERS ERROR:", err.message);
-        console.log("STACK:", err.stack);
-        next(err);
-    }
-};
+const getMyOrders = asyncHandler(async(req, res) => {
+    const orders = await orderService.getUserOrders(req.user._id);
+    res.status(200).json({
+        success: true,
+        count: orders.length,
+        data: orders,
+    });
+});
 
-
-// GET /api/admin/orders
-const getAllOrders = async(req, res, next)=>{
-    try{
-        const orders = await orderService.getAllOrders();
-        res.status(200).json({
-            success: true,
-            count: orders.length,
-            data: orders,
-        });
-    }catch(err){
-        console.log("GET ALL ORDERS ERROR:", err.message);
-        console.log("STACK:", err.stack);
-        next(err);
-    }
-};
+// GET /api/orders/admin
+const getAllOrders = asyncHandler(async(req, res) => {
+    const orders = await orderService.getAllOrders();
+    res.status(200).json({
+        success: true,
+        count: orders.length,
+        data: orders,
+    });
+});
 
 // PATCH /api/orders/:id/status
-const updateOrderStatus = async(req, res, next)=>{
-    try {
-        const order = await orderService.updateOrderStatus(req.params.id, req.body.status, req.user);
-        res.status(200).json({
-            success: true,
-            message: `Order status updated to ${order.status}`,
-            data: order,
-        });
-    }catch(err){
-        
-        next(err);
-    }
-};
+const updateOrderStatus = asyncHandler(async(req, res) => {
+    const order = await orderService.updateOrderStatus(req.params.id, req.body.status, req.user);
+    res.status(200).json({
+        success: true,
+        message: `Order status updated to ${order.status}`,
+        data: order,
+    });
+});
 
 module.exports = {
     createOrder,
