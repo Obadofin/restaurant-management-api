@@ -1,6 +1,7 @@
 const Order = require('../models/order.model');
 const MenuItem = require('../models/menu.model'); 
 const { ROLES } = require("../core/constants");
+const { StatusCodes } = require('http-status-codes');
 
 
 // Define valid status transitions
@@ -36,7 +37,7 @@ const validateAndEnrichItems = async (requestedItems) => {
 
     if(errors.length > 0){
         const error = new Error(errors.join("; "));
-        error.statusCode = 422;
+        error.statusCode = StatusCodes.UNPROCESSABLE_ENTITY;
         throw error;
     }
 
@@ -70,13 +71,13 @@ const updateOrderStatus = async (orderId, newStatus, requestingUser )=>{
 
     if(!order){
         const error = new Error("Order not found");
-        error.statusCode = 404;
+        error.statusCode = StatusCodes.NOT_FOUND;
         throw error;
     }
 
     if(!requestingUser.roles.includes(ROLES.ADMIN)){
         const error = new Error("Forbidden: Only admins can update order status");
-        error.statusCode = 403;
+        error.statusCode = StatusCodes.FORBIDDEN;
         throw error;
     }
 
@@ -85,7 +86,7 @@ const updateOrderStatus = async (orderId, newStatus, requestingUser )=>{
         await order.save();
         return order;
     } catch (err) {
-        err.statusCode = 400;
+        err.statusCode = StatusCodes.BAD_REQUEST;
         throw err;
     }
 }
