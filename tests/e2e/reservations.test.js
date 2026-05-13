@@ -20,10 +20,7 @@ afterAll(() => db.disconnect());
 const FUTURE_DATE = "2027-06-15";
 
 const createTable = async () => {
-  const res = await request(app)
-    .post("/api/tables")
-    .set("Authorization", `Bearer ${adminToken}`)
-    .send({ tableNumber: 1, capacity: 4 });
+  const res = await request(app).post("/api/tables").set("Authorization", `Bearer ${adminToken}`).send({ tableNumber: 1, capacity: 4 });
   return res.body.data._id;
 };
 
@@ -39,9 +36,7 @@ const makeReservation = (token, tableId, overrides = {}) =>
 describe("POST /api/reservations", () => {
   it("returns 401 when not authenticated", async () => {
     const tableId = await createTable();
-    const res = await request(app)
-      .post("/api/reservations")
-      .send({ table: tableId, date: FUTURE_DATE, time: "19:00", partySize: 2 });
+    const res = await request(app).post("/api/reservations").send({ table: tableId, date: FUTURE_DATE, time: "19:00", partySize: 2 });
     expect(res.statusCode).toBe(401);
   });
 
@@ -75,10 +70,7 @@ describe("POST /api/reservations", () => {
 
   it("returns 400 on validation failure (missing partySize)", async () => {
     const tableId = await createTable();
-    const res = await request(app)
-      .post("/api/reservations")
-      .set("Authorization", `Bearer ${customerToken}`)
-      .send({ table: tableId, date: FUTURE_DATE, time: "19:00" });
+    const res = await request(app).post("/api/reservations").set("Authorization", `Bearer ${customerToken}`).send({ table: tableId, date: FUTURE_DATE, time: "19:00" });
     expect(res.statusCode).toBe(400);
   });
 
@@ -175,10 +167,7 @@ describe("PUT /api/reservations/:id/status", () => {
     const created = await makeReservation(customerToken, tableId);
     const id = created.body.data._id;
 
-    const res = await request(app)
-      .put(`/api/reservations/${id}/status`)
-      .set("Authorization", `Bearer ${customerToken}`)
-      .send({ status: "confirmed" });
+    const res = await request(app).put(`/api/reservations/${id}/status`).set("Authorization", `Bearer ${customerToken}`).send({ status: "confirmed" });
     expect(res.statusCode).toBe(403);
   });
 
@@ -187,10 +176,7 @@ describe("PUT /api/reservations/:id/status", () => {
     const created = await makeReservation(customerToken, tableId);
     const id = created.body.data._id;
 
-    const res = await request(app)
-      .put(`/api/reservations/${id}/status`)
-      .set("Authorization", `Bearer ${staffToken}`)
-      .send({ status: "confirmed" });
+    const res = await request(app).put(`/api/reservations/${id}/status`).set("Authorization", `Bearer ${staffToken}`).send({ status: "confirmed" });
 
     expect(res.statusCode).toBe(200);
     expect(res.body.data.status).toBe("confirmed");
@@ -204,15 +190,9 @@ describe("PUT /api/reservations/:id/status", () => {
     const created = await makeReservation(customerToken, tableId);
     const id = created.body.data._id;
 
-    await request(app)
-      .put(`/api/reservations/${id}/status`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "confirmed" });
+    await request(app).put(`/api/reservations/${id}/status`).set("Authorization", `Bearer ${adminToken}`).send({ status: "confirmed" });
 
-    const res = await request(app)
-      .put(`/api/reservations/${id}/status`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "cancelled" });
+    const res = await request(app).put(`/api/reservations/${id}/status`).set("Authorization", `Bearer ${adminToken}`).send({ status: "cancelled" });
 
     expect(res.statusCode).toBe(200);
     expect(res.body.data.status).toBe("cancelled");
@@ -226,18 +206,12 @@ describe("PUT /api/reservations/:id/status", () => {
     const created = await makeReservation(customerToken, tableId);
     const id = created.body.data._id;
 
-    const res = await request(app)
-      .put(`/api/reservations/${id}/status`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "invalid-status" });
+    const res = await request(app).put(`/api/reservations/${id}/status`).set("Authorization", `Bearer ${adminToken}`).send({ status: "invalid-status" });
     expect(res.statusCode).toBe(400);
   });
 
   it("returns 404 for a non-existent reservation", async () => {
-    const res = await request(app)
-      .put("/api/reservations/000000000000000000000000/status")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({ status: "confirmed" });
+    const res = await request(app).put("/api/reservations/000000000000000000000000/status").set("Authorization", `Bearer ${adminToken}`).send({ status: "confirmed" });
     expect(res.statusCode).toBe(404);
   });
 });
