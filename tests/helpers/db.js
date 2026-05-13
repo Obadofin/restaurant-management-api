@@ -10,7 +10,7 @@ const connect = async () => {
 
 const disconnect = async () => {
   await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
+  await mongoose.disconnect();
   await mongod.stop();
 };
 
