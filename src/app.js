@@ -15,6 +15,9 @@ app.use("/api/users", require("./routes/auth.routes"));
 app.use("/api/categories", require("./routes/category.routes"));
 app.use("/api/menu", require("./routes/menu.routes"));
 app.use("/api/orders", require("./routes/order.routes"));
+app.use("/api/tables", require("./routes/table.routes"));
+app.use("/api/reservations", require("./routes/reservation.routes"));
+app.use("/api/payments", require("./routes/payment.routes"));
 
 // Error handler
 app.use(errorHandler);

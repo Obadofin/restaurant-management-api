@@ -19,7 +19,9 @@
   "scripts": {
     "test": "jest --runInBand --forceExit",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "seed": "node src/utils/seeder.js",
+    "seed:destroy": "node src/utils/seeder.js --destroy"
   },
   "repository": {
     "type": "git",
