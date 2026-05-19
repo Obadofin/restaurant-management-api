@@ -1,16 +1,7 @@
-<<<<<<< HEAD
-require('dotenv').config();
-const mongoose = require('mongoose');
-const colors = require("colors");
-const express = require("express");
-const cors = require("cors");
-const errorHandler = require("./middlewares/error.middleware");
-=======
 require("dotenv").config({ path: ".env" });  // Loads secret settings (e.g., database password, JWT key) from a hidden file
 const express = require("express"); // Express is the web framework that handles routing and server logic
 const cors = require("cors"); // CORS middleware allows the frontend (e.g., website or mobile app) to communicate with this backend server even if they're on different addresses (e.g., localhost:3000 for frontend and localhost:5000 for backend)
 const errorHandler = require("./middlewares/error.middleware"); // Custom middleware that catches errors from any route and sends a clean response back to the user instead of crashing the server
->>>>>>> a8b3611aaacfb0b51fd98bcbf3fb74b2e3059a56
 
 const app = express(); // Creates the Express application that will handle incoming requests and send responses
 
