@@ -8,11 +8,14 @@ const app = express(); // Creates the Express application that will handle incom
 app.use(cors());           // Allows the frontend (e.g., website or mobile app) to talk to this server from a different address
 app.use(express.json());     // Automatically converts incoming JSON data into usable JavaScript objects
 
-// Route groups: directs requests to the right part of the application
-app.use("/api/users", require("./routes/auth.routes"));       // Login, register, and account-related actions
-app.use("/api/categories", require("./routes/category.routes")); // Food/menu categories (e.g., "Drinks", "Desserts")
-app.use("/api/menu", require("./routes/menu.routes"));          // Individual food and drink items
-app.use("/api/orders", require("./routes/order.routes"));       // Customer orders and status updates
+// Routes
+app.use("/api/users", require("./routes/auth.routes"));
+app.use("/api/categories", require("./routes/category.routes"));
+app.use("/api/menu", require("./routes/menu.routes"));
+app.use("/api/orders", require("./routes/order.routes"));
+app.use("/api/tables", require("./routes/table.routes"));
+app.use("/api/reservations", require("./routes/reservation.routes"));
+app.use("/api/payments", require("./routes/payment.routes"));
 
 // Catches any errors that slip through and sends a clean response back to the user
 app.use(errorHandler);

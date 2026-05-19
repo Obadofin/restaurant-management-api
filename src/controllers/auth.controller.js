@@ -79,7 +79,7 @@ exports.login = asyncHandler(async (req, res) => {
   // Send tokens back to the client
   res.status(StatusCodes.OK).json({
     success: true,
-    token,
+    token, 
     refreshToken,
   });
 });

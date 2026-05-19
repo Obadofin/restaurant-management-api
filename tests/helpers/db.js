@@ -11,9 +11,9 @@ const connect = async () => {
 
 // Tears down the temporary database and closes the connection
 const disconnect = async () => {
-  await mongoose.connection.dropDatabase();   // Wipes all test data
-  await mongoose.connection.close();            // Closes the connection
-  await mongod.stop();                          // Shuts down the in-memory server
+  await mongoose.connection.dropDatabase();
+  await mongoose.disconnect();
+  await mongod.stop();
 };
 
 // Deletes every record from every collection (full reset between tests)
