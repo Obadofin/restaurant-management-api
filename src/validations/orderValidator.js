@@ -1,6 +1,8 @@
+// Validation rules for order-related operations using Joi
 const Joi = require("joi");
 const { ORDER_STATUS } = require("../core/constants");
 
+// Rules for placing a new order: must have at least one item in the cart
 const createOrderValidation = Joi.object({
   items: Joi.array()
     .items(
@@ -13,6 +15,7 @@ const createOrderValidation = Joi.object({
     .required(),
 });
 
+// Rules for staff updating an order's progress: status must be one of the allowed values
 const updateOrderStatusValidation = Joi.object({
   status: Joi.string()
     .valid(...Object.values(ORDER_STATUS))

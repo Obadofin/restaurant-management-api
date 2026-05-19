@@ -1,11 +1,12 @@
-const request = require("supertest");
-const app = require("../../src/app");
-const db = require("../helpers/db");
-const { registerAndLogin } = require("../helpers/auth");
+const request = require("supertest"); // Library for making HTTP requests to the Express app in tests
+const app = require("../../src/app"); // Import the Express application to test against
+const db = require("../helpers/db"); // Helper module for managing the test database connection and cleanup
+const { registerAndLogin } = require("../helpers/auth"); // Helper function to register a user and return their auth token for use in tests
 
-beforeAll(() => db.connect());
-afterEach(() => db.clearAllCollections());
-afterAll(() => db.disconnect());
+// Test lifecycle hooks: connect to test database before all tests, clean up between each, disconnect after all
+beforeAll(() => db.connect()); // Connect to the test database before running any tests
+afterEach(() => db.clearAllCollections()); // Clear all collections after each test to ensure test isolation
+afterAll(() => db.disconnect()); // Disconnect from the test database after all tests have completed
 
 // ── Test users ─────────────────────────────────────────────────────────────
 const adminUser = {
@@ -22,9 +23,9 @@ const customerUser = {
   roles: ["customer"],
 };
 
-// ── Helper: create a menu item ─────────────────────────────────────────────
+// ── Helper: creates a category and a menu item, returns the menu item's ID ──
 const createMenuItemAndCategory = async (adminToken) => {
-  // Create category first
+  // Create a category first (menu items must belong to one)
   const categoryRes = await request(app)
     .post("/api/categories")
     .set("Authorization", `Bearer ${adminToken}`)
@@ -32,7 +33,7 @@ const createMenuItemAndCategory = async (adminToken) => {
 
   const categoryId = categoryRes.body.data._id;
 
-  // Create menu item
+  // Create a food item linked to that category
   const menuRes = await request(app)
     .post("/api/menu")
     .set("Authorization", `Bearer ${adminToken}`)
@@ -61,11 +62,11 @@ describe("POST /api/orders", () => {
       .set("Authorization", `Bearer ${customerToken}`)
       .send({ items: [{ menuItemId, quantity: 2 }] });
 
-    expect(res.statusCode).toBe(201);
+    expect(res.statusCode).toBe(201);                          // Expect "Created" status
     expect(res.body.success).toBe(true);
-    expect(res.body.data.status).toBe("pending");
-    expect(res.body.data.totalPrice).toBe(3000);
-    expect(res.body.data.items[0].name).toBe("Jollof Rice");
+    expect(res.body.data.status).toBe("pending");                // New orders always start as pending
+    expect(res.body.data.totalPrice).toBe(3000);                 // 2 × ₦1500 = ₦3000 (auto-calculated)
+    expect(res.body.data.items[0].name).toBe("Jollof Rice");     // Item name is saved at time of order
   });
 
   it("calculates totalPrice automatically", async () => {
@@ -79,7 +80,7 @@ describe("POST /api/orders", () => {
       .send({ items: [{ menuItemId, quantity: 3 }] });
 
     expect(res.statusCode).toBe(201);
-    expect(res.body.data.totalPrice).toBe(4500);
+    expect(res.body.data.totalPrice).toBe(4500);               // 3 × ₦1500 = ₦4500
   });
 
   it("returns 422 if items array is empty", async () => {
@@ -90,7 +91,7 @@ describe("POST /api/orders", () => {
       .set("Authorization", `Bearer ${customerToken}`)
       .send({ items: [] });
 
-    expect(res.statusCode).toBe(422);
+    expect(res.statusCode).toBe(422);                          // Expect "Unprocessable Entity" for empty cart
     expect(res.body.success).toBe(false);
   });
 
@@ -102,7 +103,7 @@ describe("POST /api/orders", () => {
       .set("Authorization", `Bearer ${customerToken}`)
       .send({ items: [{ menuItemId: "64f1b2c3d4e5f6a7b8c9d0e1", quantity: 1 }] });
 
-    expect(res.statusCode).toBe(422);
+    expect(res.statusCode).toBe(422);                            // Expect rejection for non-existent menu item
     expect(res.body.success).toBe(false);
   });
 
@@ -111,7 +112,7 @@ describe("POST /api/orders", () => {
       .post("/api/orders")
       .send({ items: [{ menuItemId: "64f1b2c3d4e5f6a7b8c9d0e1", quantity: 1 }] });
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(401);                          // Expect "Unauthorized" for missing login
   });
 });
 
@@ -124,7 +125,7 @@ describe("GET /api/orders/me", () => {
     const customerToken = await registerAndLogin(customerUser);
     const menuItemId = await createMenuItemAndCategory(adminToken);
 
-    // Create two orders for customer
+    // Create two orders for the same customer
     await request(app)
       .post("/api/orders")
       .set("Authorization", `Bearer ${customerToken}`)
@@ -141,7 +142,7 @@ describe("GET /api/orders/me", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.count).toBe(2);
+    expect(res.body.count).toBe(2);                            // Expect exactly 2 orders for this user
   });
 
   it("returns 401 if not authenticated", async () => {
@@ -172,7 +173,7 @@ describe("PATCH /api/orders/:id/status", () => {
       .send({ status: "preparing" });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.data.status).toBe("preparing");
+    expect(res.body.data.status).toBe("preparing");              // Expect status to advance correctly
   });
 
   it("returns 400 for invalid status transition", async () => {
@@ -187,13 +188,13 @@ describe("PATCH /api/orders/:id/status", () => {
 
     const orderId = orderRes.body.data._id;
 
-    // Try to jump from pending to completed directly
+    // Try to jump from pending directly to completed (skipping "preparing")
     const res = await request(app)
       .patch(`/api/orders/${orderId}/status`)
       .set("Authorization", `Bearer ${adminToken}`)
       .send({ status: "completed" });
 
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(400);                          // Expect "Bad Request" for illegal jump
     expect(res.body.success).toBe(false);
   });
 
@@ -214,7 +215,7 @@ describe("PATCH /api/orders/:id/status", () => {
       .set("Authorization", `Bearer ${customerToken}`)
       .send({ status: "preparing" });
 
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(403);                          // Expect "Forbidden" — customers can't change status
   });
 });
 
@@ -238,7 +239,7 @@ describe("GET /api/orders/admin", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.count).toBe(1);
+    expect(res.body.count).toBe(1);                            // Expect to see all orders in the system
   });
 
   it("returns 403 if customer tries to access all orders", async () => {
@@ -248,7 +249,7 @@ describe("GET /api/orders/admin", () => {
       .get("/api/orders/admin")
       .set("Authorization", `Bearer ${customerToken}`);
 
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(403);                          // Expect "Forbidden" — customers can only see their own
   });
 
   it("returns 401 if not authenticated", async () => {
