@@ -1,3 +1,4 @@
+// Import mongoose for creating schemas and models
 const mongoose = require("mongoose");
 const { StatusCodes } = require("http-status-codes");
 const { ORDER_STATUS } = require("../core/constants");
@@ -65,6 +66,7 @@ orderSchema.pre("save", function () {
   this.totalPrice = parseFloat(this.totalPrice.toFixed(2));
 });
 
+// Allowed status changes: controls the order lifecycle to prevent invalid jumps
 const VALID_TRANSITION = {
   [ORDER_STATUS.PENDING]: [ORDER_STATUS.PREPARING, ORDER_STATUS.CANCELLED],
   [ORDER_STATUS.PREPARING]: [ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED],

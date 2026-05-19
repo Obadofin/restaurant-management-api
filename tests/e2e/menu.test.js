@@ -1,10 +1,11 @@
-const request = require("supertest");
-const app = require("../../src/app");
-const db = require("../helpers/db");
-const { registerAndLogin } = require("../helpers/auth");
+const request = require("supertest"); // Library for making HTTP requests to the Express app in tests
+const app = require("../../src/app"); // Import the Express application to test against
+const db = require("../helpers/db"); // Helper module for managing the test database connection and cleanup
+const { registerAndLogin } = require("../helpers/auth"); // Helper function to register a user and return their auth token for use in tests
 
-let adminToken, staffToken, customerToken, categoryId;
+let adminToken, staffToken, customerToken, categoryId; // Variables to hold authentication tokens for different user roles and a category ID, set up before tests run
 
+// Set up three test users with different roles before any tests run
 beforeAll(async () => {
   await db.connect();
   adminToken = await registerAndLogin({ name: "Admin", email: "admin@test.com", password: "password123", roles: ["admin"] });
@@ -23,6 +24,7 @@ beforeEach(async () => {
   categoryId = catRes.body.data._id;
 });
 
+// Helper to build a valid menu item using the current category
 const baseItem = () => ({
   name: "Grilled Salmon",
   description: "Fresh Atlantic salmon",
@@ -30,6 +32,7 @@ const baseItem = () => ({
   category: categoryId,
 });
 
+// Tests for listing all menu items (public — no login needed)
 describe("GET /api/menu", () => {
   it("returns 200 with an empty list", async () => {
     const res = await request(app).get("/api/menu");
@@ -43,7 +46,7 @@ describe("GET /api/menu", () => {
     const res = await request(app).get("/api/menu");
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(1);
-    expect(res.body.data[0].category.name).toBe("Main Course");
+    expect(res.body.data[0].category.name).toBe("Main Course");  // Category details are included, not just an ID
   });
 
   it("filters items by ?category= query param", async () => {
@@ -58,10 +61,11 @@ describe("GET /api/menu", () => {
     const res = await request(app).get(`/api/menu?category=${categoryId}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(1);
-    expect(res.body.data[0].name).toBe("Grilled Salmon");
+    expect(res.body.data[0].name).toBe("Grilled Salmon");  // Only shows items from the requested category
   });
 });
 
+// Tests for viewing a single menu item (public — no login needed)
 describe("GET /api/menu/:id", () => {
   it("returns 200 with the menu item", async () => {
     const created = await request(app).post("/api/menu").set("Authorization", `Bearer ${adminToken}`).send(baseItem());
@@ -79,15 +83,16 @@ describe("GET /api/menu/:id", () => {
   });
 });
 
+// Tests for creating a menu item (admin or staff only)
 describe("POST /api/menu", () => {
   it("returns 401 when no token is provided", async () => {
     const res = await request(app).post("/api/menu").send(baseItem());
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(401);  // Not logged in
   });
 
   it("returns 403 when a customer tries to create a menu item", async () => {
     const res = await request(app).post("/api/menu").set("Authorization", `Bearer ${customerToken}`).send(baseItem());
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(403);  // Logged in but wrong role
   });
 
   it("allows admin to create a menu item", async () => {
@@ -95,7 +100,7 @@ describe("POST /api/menu", () => {
     expect(res.statusCode).toBe(201);
     expect(res.body.data.name).toBe("Grilled Salmon");
     expect(res.body.data.price).toBe(18.99);
-    expect(res.body.data.isAvailable).toBe(true);
+    expect(res.body.data.isAvailable).toBe(true);  // Defaults to available
     expect(res.body.data.category.name).toBe("Main Course");
   });
 
@@ -109,7 +114,7 @@ describe("POST /api/menu", () => {
       .post("/api/menu")
       .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...baseItem(), category: "000000000000000000000000" });
-    expect(res.statusCode).toBe(404);
+    expect(res.statusCode).toBe(404);  // Can't link to a non-existent category
   });
 
   it("returns 400 on validation failure (negative price)", async () => {
@@ -131,13 +136,15 @@ describe("POST /api/menu", () => {
       .post("/api/menu")
       .set("Authorization", `Bearer ${adminToken}`)
       .send({ ...baseItem(), category: "not-an-id" });
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(400);  // Must be a valid 24-character MongoDB ID
   });
 });
 
+// Tests for updating a menu item (admin or staff only)
 describe("PUT /api/menu/:id", () => {
   let menuId;
 
+  // Create a fresh menu item before each update test
   beforeEach(async () => {
     const res = await request(app).post("/api/menu").set("Authorization", `Bearer ${adminToken}`).send(baseItem());
     menuId = res.body.data._id;
@@ -152,7 +159,7 @@ describe("PUT /api/menu/:id", () => {
   it("allows staff to toggle availability", async () => {
     const res = await request(app).put(`/api/menu/${menuId}`).set("Authorization", `Bearer ${staffToken}`).send({ isAvailable: false });
     expect(res.statusCode).toBe(200);
-    expect(res.body.data.isAvailable).toBe(false);
+    expect(res.body.data.isAvailable).toBe(false);  // Marks item as out of stock / unavailable
   });
 
   it("returns 403 when a customer tries to update", async () => {
@@ -162,7 +169,7 @@ describe("PUT /api/menu/:id", () => {
 
   it("returns 400 if body is empty", async () => {
     const res = await request(app).put(`/api/menu/${menuId}`).set("Authorization", `Bearer ${adminToken}`).send({});
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(400);  // Must provide at least one field to change
   });
 
   it("returns 404 if category in update does not exist", async () => {
@@ -176,9 +183,11 @@ describe("PUT /api/menu/:id", () => {
   });
 });
 
+// Tests for deleting a menu item (admin only)
 describe("DELETE /api/menu/:id", () => {
   let menuId;
 
+  // Create a fresh menu item before each delete test
   beforeEach(async () => {
     const res = await request(app).post("/api/menu").set("Authorization", `Bearer ${adminToken}`).send(baseItem());
     menuId = res.body.data._id;
@@ -191,7 +200,7 @@ describe("DELETE /api/menu/:id", () => {
 
   it("returns 403 when staff tries to delete a menu item", async () => {
     const res = await request(app).delete(`/api/menu/${menuId}`).set("Authorization", `Bearer ${staffToken}`);
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(403);  // Staff can edit but not remove items
   });
 
   it("returns 403 when customer tries to delete a menu item", async () => {
