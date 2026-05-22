@@ -1,5 +1,4 @@
-# restaurant-management-api 
-1. Daniel Obadofin - Team lead, project manager, testing and integration.
+ 1. Daniel Obadofin - Team lead, project manager, testing and integration.
 2. Pofi Abel - Menu module, categories module, tables and reservations module, mock payments module, code reviews
 3. Olatoye Emmanuel Temidayo - Auth Module
 4. Nwachukwu Emenike - Role based authorization, encryption, auth module
@@ -9,5 +8,4 @@
 8. Akinmuboni oluwadunsin David - Team support
 9. Hamzat Fadlullah - Team support
 10. Princewill Daniel - Team support
-11. Samuel Ubighi - Team support.
-
+11. Samuel Ubighi - Team support
